@@ -1,2 +1,4 @@
-"""FinAgent Unified - Financial AI Agent Platform"""
-__version__ = "0.1.0"
+"""Investment Specialist Agent."""
+from .agent import InvestmentAgent
+
+__all__ = ["InvestmentAgent"]
