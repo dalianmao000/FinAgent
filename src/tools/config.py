@@ -39,7 +39,8 @@ class Settings(BaseSettings):
     es_host: str = "localhost"
     es_port: int = 9200
     es_username: str = "elastic"
-    es_password: str = ""
+    es_password: str = "h5ZWvMKYQjGz3JMOmFAwMg"
+    es_index_name: str = "qwen_agent_docs_vector"
 
     # Tavily API
     tavily_api_key: str = ""
