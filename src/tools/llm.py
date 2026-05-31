@@ -9,23 +9,16 @@ from dashscope import Generation
 from .config import get_settings
 
 
-@dataclass
-class LLMConfig:
-    """LLM configuration."""
-    temperature: float = 0.7
-    max_tokens: int = 2000
-    timeout: int = 30
-
-
 class DashScopeLLM:
     """DashScope (Qwen) LLM wrapper."""
 
-    def __init__(self, api_key: Optional[str] = None, config: Optional[LLMConfig] = None):
+    def __init__(self, api_key: Optional[str] = None):
         settings = get_settings()
         self.api_key = api_key or settings.dashscope_api_key
         dashscope.api_key = self.api_key
         self.model_name = settings.model_name
-        self.config = config or LLMConfig()
+        self.temperature = settings.model_temperature
+        self.max_tokens = settings.model_max_tokens
 
     def chat(
         self,
@@ -47,8 +40,8 @@ class DashScopeLLM:
         response = Generation.call(
             model=self.model_name,
             messages=full_messages,
-            temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
             result_format='message',
             **extra_params
         )

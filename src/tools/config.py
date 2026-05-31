@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # ==================
     model_name: str = "qwen-turbo"
     model_type: str = "qwen_dashscope"
+    model_temperature: float = 0.7
+    model_max_tokens: int = 2000
+    model_timeout: int = 30
 
     # ==================
     # API Keys
