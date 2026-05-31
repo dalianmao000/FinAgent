@@ -18,21 +18,13 @@ class CoordinatorAgent:
         self.session_id = session_id
         self.specialists = specialists or []
 
-        # Build agent configs for MultiAgentHub
-        agent_configs = []
-        for specialist in self.specialists:
-            agent_configs.append({
-                'agent': specialist,
-                'name': specialist.name,
-                'description': specialist.description,
-            })
+        # Create a MultiAgentHub subclass with the specialists
+        class FinAgentHub(MultiAgentHub):
+            def __init__(self, agents):
+                self._agents = agents
+                super().__init__()
 
-        self.agent = MultiAgentHub(
-            agent_configs=agent_configs,
-            llm={'model': 'qwen-turbo', 'model_type': 'dashscope'},
-            system_message=self.SYSTEM_PROMPT,
-            **kwargs
-        )
+        self.agent = FinAgentHub(specialists)
 
     def process(self, user_message: str) -> str:
         """Process user message through the multi-agent system."""

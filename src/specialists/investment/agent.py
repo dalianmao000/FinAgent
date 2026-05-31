@@ -51,7 +51,7 @@ class InvestmentAgent(Assistant):
 
     def __init__(self, session_id: str, **kwargs):
         super().__init__(
-            llm={'model': 'qwen-turbo', 'model_type': 'dashscope'},
+            llm={'model': 'qwen-turbo', 'model_type': 'qwen_dashscope'},
             system_message=self.SYSTEM_MESSAGE,
             function_list=[
                 QueryPositionsTool(),

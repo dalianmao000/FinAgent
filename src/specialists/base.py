@@ -22,7 +22,7 @@ class SpecialistAgent(Assistant):
         if llm_config is None:
             llm_config = {
                 'model': 'qwen-turbo',
-                'model_type': 'dashscope',
+                'model_type': 'qwen_dashscope',
             }
         super().__init__(
             llm=llm_config,
