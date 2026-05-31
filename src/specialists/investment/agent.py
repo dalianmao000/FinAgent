@@ -8,6 +8,7 @@ from .tools import (
     BollDetectionTool,
     ProphetAnalysisTool,
 )
+from ...tools.config import get_settings
 
 
 class InvestmentAgent(Assistant):
@@ -17,8 +18,9 @@ class InvestmentAgent(Assistant):
     SYSTEM_MESSAGE = """你是一个专业的投资分析专家。你可以查询客户持仓情况、计算盈亏、分析投资收益、进行股价预测、布林带异常检测、周期性分析。"""
 
     def __init__(self, session_id: str, **kwargs):
+        settings = get_settings()
         super().__init__(
-            llm={'model': 'qwen-turbo', 'model_type': 'qwen_dashscope'},
+            llm={'model': settings.model_name, 'model_type': settings.model_type},
             system_message=self.SYSTEM_MESSAGE,
             function_list=[
                 QueryPositionsTool(),

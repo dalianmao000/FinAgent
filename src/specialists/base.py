@@ -3,6 +3,8 @@ from typing import Dict, List, Optional
 from qwen_agent.agents import Assistant
 from qwen_agent.llm.schema import Message
 
+from ..tools.config import get_settings
+
 
 class SpecialistAgent(Assistant):
     """Specialist agent based on qwen-agent Assistant."""
@@ -20,9 +22,10 @@ class SpecialistAgent(Assistant):
     ):
         self.session_id = session_id
         if llm_config is None:
+            settings = get_settings()
             llm_config = {
-                'model': 'qwen-turbo',
-                'model_type': 'qwen_dashscope',
+                'model': settings.model_name,
+                'model_type': settings.model_type,
             }
         super().__init__(
             llm=llm_config,

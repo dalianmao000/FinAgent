@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     """Application settings - values loaded from .env file."""
 
     # ==================
+    # Model Configuration
+    # ==================
+    model_name: str = "qwen-turbo"
+    model_type: str = "qwen_dashscope"
+
+    # ==================
     # API Keys
     # ==================
     dashscope_api_key: str = ""

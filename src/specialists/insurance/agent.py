@@ -6,6 +6,7 @@ from .tools import (
     ESVectorRetrievalTool,
     ESHybridRetrievalTool,
 )
+from ...tools.config import get_settings
 
 
 class InsuranceAgent(Assistant):
@@ -22,8 +23,9 @@ class InsuranceAgent(Assistant):
 当用户询问保险条款时，优先使用ES检索工具获取相关内容。"""
 
     def __init__(self, session_id: str, **kwargs):
+        settings = get_settings()
         super().__init__(
-            llm={'model': 'qwen-turbo', 'model_type': 'qwen_dashscope'},
+            llm={'model': settings.model_name, 'model_type': settings.model_type},
             system_message=self.SYSTEM_MESSAGE,
             function_list=[
                 ESTextRetrievalTool(),

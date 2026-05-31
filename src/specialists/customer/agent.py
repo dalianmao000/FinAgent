@@ -10,6 +10,7 @@ from .tools import (
     ARIMAAssetForecastTool,
     LightGBMAssetPredictionTool,
 )
+from ...tools.config import get_settings
 
 
 class CustomerAgent(Assistant):
@@ -19,8 +20,9 @@ class CustomerAgent(Assistant):
     SYSTEM_MESSAGE = """你是一个专业的客户经营专家。你可以执行SQL查询客户数据、进行客户分群、预测高价值客户、分析产品关联规则、预测资产趋势等。"""
 
     def __init__(self, session_id: str, **kwargs):
+        settings = get_settings()
         super().__init__(
-            llm={'model': 'qwen-turbo', 'model_type': 'qwen_dashscope'},
+            llm={'model': settings.model_name, 'model_type': settings.model_type},
             system_message=self.SYSTEM_MESSAGE,
             function_list=[
                 ExecuteSQLTool(),
