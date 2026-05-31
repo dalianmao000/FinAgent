@@ -12,18 +12,29 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # MySQL
+    # MySQL - FinAgent Database
     mysql_host: str = "localhost"
     mysql_port: int = 3306
     mysql_user: str = "root"
     mysql_password: str = "password"
     mysql_database: str = "finagent"
 
+    # MySQL - Stock Database (for investment tools)
+    stock_db_host: str = "localhost"
+    stock_db_port: int = 3306
+    stock_db_user: str = "root"
+    stock_db_password: str = "lijia841020"
+    stock_db_name: str = "stock"
+    stock_db_charset: str = "utf8mb4"
+
     # Elasticsearch
     es_host: str = "localhost"
     es_port: int = 9200
     es_username: str = "elastic"
     es_password: str = ""
+
+    # Tavily API
+    tavily_api_key: str = ""
 
     # API Server
     api_host: str = "0.0.0.0"
@@ -32,6 +43,10 @@ class Settings(BaseSettings):
     @property
     def mysql_url(self) -> str:
         return f"mysql+mysqlconnector://{self.mysql_user}:{self.mysql_password}@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}?charset=utf8mb4"
+
+    @property
+    def stock_db_url(self) -> str:
+        return f"mysql+mysqlconnector://{self.stock_db_user}:{self.stock_db_password}@{self.stock_db_host}:{self.stock_db_port}/{self.stock_db_name}?charset={self.stock_db_charset}"
 
     class Config:
         env_file = ".env"
