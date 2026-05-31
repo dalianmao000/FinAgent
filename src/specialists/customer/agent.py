@@ -2,8 +2,6 @@
 from qwen_agent.agents import Assistant
 
 from .tools import (
-    QueryProfileTool,
-    CustomerClusteringTool,
     HighValueUserInsightTool,
     DecisionTreeAssetPredictionTool,
     KMeansClusteringTool,
@@ -16,16 +14,14 @@ from .tools import (
 class CustomerAgent(Assistant):
     """Specialist agent for customer management."""
     NAME = "customer"
-    DESCRIPTION = "客户经营专家，可以查询客户画像和进行分群分析"
-    SYSTEM_MESSAGE = """你是一个专业的客户经营专家。你可以查询客户画像、分析客户群体、预测客户流失风险、提供高价值用户画像、决策树分析、ARIMA预测等高级分析功能。"""
+    DESCRIPTION = "客户经营专家，提供高价值用户画像、决策树分析、KMeans聚类、产品关联、ARIMA预测等高级分析功能"
+    SYSTEM_MESSAGE = """你是一个专业的客户经营专家。你可以分析客户画像、进行客户分群、预测高价值客户、分析产品关联规则、预测资产趋势等。"""
 
     def __init__(self, session_id: str, **kwargs):
         super().__init__(
             llm={'model': 'qwen-turbo', 'model_type': 'qwen_dashscope'},
             system_message=self.SYSTEM_MESSAGE,
             function_list=[
-                QueryProfileTool(),
-                CustomerClusteringTool(),
                 HighValueUserInsightTool(),
                 DecisionTreeAssetPredictionTool(),
                 KMeansClusteringTool(),
