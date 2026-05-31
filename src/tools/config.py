@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     stock_db_name: str = "stock"
     stock_db_charset: str = "utf8mb4"
 
+    # MySQL - Customer Database (for customer tools)
+    customer_db_host: str = "localhost"
+    customer_db_port: int = 3306
+    customer_db_user: str = "root"
+    customer_db_password: str = "lijia841020"
+    customer_db_name: str = "enterprise_credit_clients"
+    customer_db_charset: str = "utf8mb4"
+
     # Elasticsearch
     es_host: str = "localhost"
     es_port: int = 9200
@@ -47,6 +55,10 @@ class Settings(BaseSettings):
     @property
     def stock_db_url(self) -> str:
         return f"mysql+mysqlconnector://{self.stock_db_user}:{self.stock_db_password}@{self.stock_db_host}:{self.stock_db_port}/{self.stock_db_name}?charset={self.stock_db_charset}"
+
+    @property
+    def customer_db_url(self) -> str:
+        return f"mysql+mysqlconnector://{self.customer_db_user}:{self.customer_db_password}@{self.customer_db_host}:{self.customer_db_port}/{self.customer_db_name}?charset={self.customer_db_charset}"
 
     class Config:
         env_file = ".env"
