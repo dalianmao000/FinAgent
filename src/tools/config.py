@@ -1,10 +1,14 @@
-"""Configuration management for FinAgent Unified."""
+"""Configuration management for FinAgent Unified.
+
+All sensitive values (passwords, API keys) must be set in .env file.
+This module reads from .env via pydantic-settings.
+"""
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Application settings - values loaded from .env file."""
 
     # ==================
     # API Keys
@@ -22,7 +26,7 @@ class Settings(BaseSettings):
     finagent_db_host: str = "localhost"
     finagent_db_port: int = 3306
     finagent_db_user: str = "root"
-    finagent_db_password: str = "password"
+    finagent_db_password: str = ""
     finagent_db_name: str = "finagent"
     finagent_db_charset: str = "utf8mb4"
 
@@ -32,7 +36,7 @@ class Settings(BaseSettings):
     stock_db_host: str = "localhost"
     stock_db_port: int = 3306
     stock_db_user: str = "root"
-    stock_db_password: str = "lijia841020"
+    stock_db_password: str = ""
     stock_db_name: str = "stock"
     stock_db_charset: str = "utf8mb4"
 
@@ -42,7 +46,7 @@ class Settings(BaseSettings):
     customer_db_host: str = "localhost"
     customer_db_port: int = 3306
     customer_db_user: str = "root"
-    customer_db_password: str = "lijia841020"
+    customer_db_password: str = ""
     customer_db_name: str = "enterprise_credit_clients"
     customer_db_charset: str = "utf8mb4"
 
@@ -52,7 +56,7 @@ class Settings(BaseSettings):
     es_host: str = "localhost"
     es_port: int = 9200
     es_username: str = "elastic"
-    es_password: str = "h5ZWvMKYQjGz3JMOmFAwMg"
+    es_password: str = ""
     es_index_name: str = "qwen_agent_docs_vector"
 
     # ==================
