@@ -1,0 +1,55 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=finagent
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
+    depends_on:
+      - redis
+      - mysql
+      - elasticsearch
+
+  celery_worker:
+    build: .
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    command: celery -A src.message_bus.celery_app worker --loglevel=info
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  mysql:
+    image: mysql:8
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=finagent
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./data/mysql:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+volumes:
+  mysql_data:
+  es_data:
