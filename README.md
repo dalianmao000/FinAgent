@@ -111,8 +111,13 @@ python -m src.api.main
 python -m src.api.fastapi_app
 # 或 uvicorn src.api.fastapi_app:app --host 0.0.0.0 --port 8000
 
-# Gradio WebUI
+# Gradio WebUI - 统一平台（3个专家Agent）
 python -m src.gui.webui --unified
+
+# Gradio WebUI - 单独专家界面
+python -m src.gui.webui investment   # 投资分析助手
+python -m src.gui.webui customer    # 客户经营助手
+python -m src.gui.webui insurance   # 保险顾问助手
 
 # 单独测试 Investment Agent
 python -m src.specialists.investment.agent

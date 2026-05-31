@@ -28,28 +28,107 @@ def init_insurance_agent():
     return InsuranceAgent(session_id='webui-insurance')
 
 
-def app_gui():
-    """Launch Gradio WebUI for FinAgent Unified."""
+INVESTMENT_EXAMPLES = [
+    '查询我的持仓情况',
+    '贵州茅台亏了多少？',
+    '预测贵州茅台未来10天股价',
+    '检测贵州茅台近一年超买超卖点',
+    '分析五粮液近一年周期性规律',
+]
+
+CUSTOMER_EXAMPLES = [
+    '数据库包含哪些表和字段',
+    '我行目前有多少客户？总资产管理规模是多少？',
+    '客户的平均资产是多少？高净值客户的占比如何？',
+    '客户"33c44545627f41e8ad113027340de3e9"成为高价值客户的概率是多少？',
+    '哪些客户未来3个月资产容易提升至100万+?',
+    '分析产品关联规则，有哪些频繁产品组合？',
+    '预测客户00022f44a4c74496aa0d8c5f95142a5b未来3个月资产变化',
+    '基于理财产品的交叉销售策略是什么？',
+]
+
+INSURANCE_EXAMPLES = [
+    '查询保险条款：重疾险保障范围',
+    '查询保险条款：意外医疗报销比例',
+    '保单贷款能贷多少钱？',
+    '查询万能险的收益规则',
+    '对比医疗险和重疾险的区别',
+]
+
+
+def app_gui(agent_type='investment'):
+    """Launch Gradio WebUI for single specialist agent.
+
+    Args:
+        agent_type: 'investment', 'customer', or 'insurance'
+    """
     try:
-        from qwen_agent.gui import WebUI
+        import gradio as gr
     except ImportError:
-        print("qwen-agent GUI dependencies not installed.")
-        print("Run: pip install 'qwen-agent[gui]'")
+        print("Gradio not installed. Run: pip install gradio")
         return
 
-    bot = InvestmentAgent(session_id='webui')
-    chatbot_config = {
-        'prompt.suggestions': [
-            '查询我的持仓情况',
-            '贵州茅台亏了多少？',
-            '预测贵州茅台未来10天股价',
-            '检测贵州茅台近一年超买超卖点',
-            '分析五粮液近一年周期性规律',
-        ]
-    }
+    if agent_type == 'investment':
+        bot = init_investment_agent()
+        title = "投资分析助手"
+        description = "专业投资分析专家，提供持仓查询、盈亏计算、股价预测、布林带检测、周期性分析等功能"
+        examples = INVESTMENT_EXAMPLES
+    elif agent_type == 'customer':
+        bot = init_customer_agent()
+        title = "客户经营助手"
+        description = "专业客户经营专家，提供客户画像、分群分析、产品关联、资产预测等高级分析功能"
+        examples = CUSTOMER_EXAMPLES
+    elif agent_type == 'insurance':
+        bot = init_insurance_agent()
+        title = "保险顾问助手"
+        description = "专业保险顾问专家，提供保险条款查询、保单分析、保单贷款计算等功能"
+        examples = INSURANCE_EXAMPLES
+    else:
+        print(f"Unknown agent type: {agent_type}")
+        print("Usage: python -m src.gui.webui [investment|customer|insurance]")
+        return
 
-    print("Web 界面准备就绪，正在启动服务...")
-    WebUI(bot, chatbot_config=chatbot_config).run()
+    with gr.Blocks(title=title) as demo:
+        gr.Markdown(f"# {title}")
+        gr.Markdown(description)
+
+        with gr.Row():
+            with gr.Column(scale=3):
+                chatbot = gr.Chatbot(height=500, label="对话")
+                msg_input = gr.Textbox(
+                    label="输入您的问题",
+                    placeholder=f"例如：{examples[0]}",
+                    lines=3
+                )
+                with gr.Row():
+                    submit_btn = gr.Button("发送", variant="primary")
+                    clear_btn = gr.Button("清空")
+
+            with gr.Column(scale=1):
+                gr.Markdown("### Agent 信息")
+                gr.Markdown(f"**类型**: {agent_type}")
+                gr.Markdown(f"**模型**: qwen-turbo")
+
+        gr.Markdown("### 示例问题")
+        gr.Examples(
+            examples=[[e] for e in examples],
+            inputs=msg_input
+        )
+
+        def chat_fn(message, history):
+            """Handle chat interaction."""
+            try:
+                response = bot.process(message)
+                return response
+            except Exception as e:
+                return f"发生错误: {str(e)}"
+
+        submit_btn.click(chat_fn, inputs=[msg_input, chatbot], outputs=[chatbot])
+        msg_input.submit(chat_fn, inputs=[msg_input, chatbot], outputs=[chatbot])
+        clear_btn.click(lambda: ([], ""), outputs=[chatbot, msg_input])
+
+    print(f"{title} WebUI 准备就绪...")
+    demo.launch(server_name="0.0.0.0", server_port=7860)
 
 
 def app_gui_unified():
@@ -135,7 +214,14 @@ def app_gui_unified():
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == '--unified':
-        app_gui_unified()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '--unified':
+            app_gui_unified()
+        elif sys.argv[1] in ('investment', 'customer', 'insurance'):
+            app_gui(sys.argv[1])
+        else:
+            print("用法: python -m src.gui.webui [investment|customer|insurance|--unified]")
+            print("  默认启动投资分析助手")
+            app_gui('investment')
     else:
-        app_gui()
+        app_gui('investment')
