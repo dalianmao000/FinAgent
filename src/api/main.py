@@ -1,14 +1,12 @@
-"""Flask API for FinAgent Unified."""
+"""Flask API for FinAgent Unified - qwen-agent based."""
 from flask import Flask, request, jsonify
 from typing import Dict, Any
 import uuid
 
-from ..coordinator.agent import CoordinatorAgent, AgentConfig
-from ..coordinator.intent_classifier import Domain
+from ..coordinator.agent import CoordinatorAgent
 from ..specialists.investment.agent import InvestmentAgent
 from ..specialists.customer.agent import CustomerAgent
 from ..specialists.insurance.agent import InsuranceAgent
-from ..specialists.base import SpecialistConfig
 
 
 def create_app() -> Flask:
@@ -22,23 +20,16 @@ def create_app() -> Flask:
     def get_or_create_coordinator(session_id: str) -> CoordinatorAgent:
         """Get or create coordinator for session."""
         if session_id not in _agents:
-            config = AgentConfig(agent_name="coordinator", session_id=session_id)
-            coordinator = CoordinatorAgent(session_id=session_id, config=config)
+            # Create specialist agents
+            investment_agent = InvestmentAgent(session_id=session_id)
+            customer_agent = CustomerAgent(session_id=session_id)
+            insurance_agent = InsuranceAgent(session_id=session_id)
 
-            # Register specialist agents
-            inv_config = SpecialistConfig(
-                agent_name="investment", domain=Domain.INVESTMENT, session_id=session_id
+            # Create coordinator with specialists
+            coordinator = CoordinatorAgent(
+                session_id=session_id,
+                specialists=[investment_agent, customer_agent, insurance_agent]
             )
-            cust_config = SpecialistConfig(
-                agent_name="customer", domain=Domain.CUSTOMER, session_id=session_id
-            )
-            ins_config = SpecialistConfig(
-                agent_name="insurance", domain=Domain.INSURANCE, session_id=session_id
-            )
-
-            coordinator.register_specialist("investment", InvestmentAgent(inv_config))
-            coordinator.register_specialist("customer", CustomerAgent(cust_config))
-            coordinator.register_specialist("insurance", InsuranceAgent(ins_config))
 
             _agents[session_id] = coordinator
 
@@ -68,35 +59,41 @@ def create_app() -> Flask:
         coordinator = _agents[session_id]
         status_info = coordinator.get_status()
 
-        # Convert CustomerContext to dict for JSON serialization
-        if status_info.get("customer"):
-            status_info["customer"] = status_info["customer"].model_dump()
-
         return jsonify(status_info)
 
     @app.route("/api/v1/session/<session_id>/customer", methods=["POST"])
     def set_customer(session_id: str):
-        """Set current customer for session."""
+        """Set current customer for session (stored in-memory for now)."""
         data = request.get_json()
-        customer_id = data.get("customer_id")
+        customer_id = data.get("customer_id", "")
         name = data.get("name", "未知客户")
         total_assets = data.get("total_assets", 0)
         risk_level = data.get("risk_level", "R1")
-        lifecycle_stage = data.get("lifecycle_stage", "")
 
-        coordinator = get_or_create_coordinator(session_id)
+        # Store customer info in session (simple in-memory storage)
+        if session_id not in _agents:
+            get_or_create_coordinator(session_id)
 
-        from ..message_bus.shared_context import CustomerContext
-        customer = CustomerContext(
-            customer_id=customer_id or "unknown",
-            name=name,
-            total_assets=total_assets,
-            risk_level=risk_level,
-            lifecycle_stage=lifecycle_stage
-        )
-        coordinator.shared_context.set_customer(customer)
+        # Store in a simple dict - in production would use Redis
+        if not hasattr(set_customer, '_customer_store'):
+            set_customer._customer_store = {}
 
-        return jsonify({"status": "success", "customer": customer.model_dump()})
+        set_customer._customer_store[session_id] = {
+            "customer_id": customer_id,
+            "name": name,
+            "total_assets": total_assets,
+            "risk_level": risk_level
+        }
+
+        return jsonify({
+            "status": "success",
+            "customer": {
+                "customer_id": customer_id,
+                "name": name,
+                "total_assets": total_assets,
+                "risk_level": risk_level
+            }
+        })
 
     @app.route("/api/v1/health", methods=["GET"])
     def health():

@@ -1,129 +1,63 @@
 """Investment Specialist Agent - 投资专家."""
 from typing import Dict, Any
-from unittest.mock import MagicMock
-
-from ..base import SpecialistAgent, SpecialistConfig, Tool
-from ...coordinator.intent_classifier import Domain
+from qwen_agent.tools.base import BaseTool, register_tool
+from qwen_agent.agents import Assistant
 
 
-class InvestmentAgent(SpecialistAgent):
+@register_tool('investment_query_positions')
+class QueryPositionsTool(BaseTool):
+    """查询客户持仓情况"""
+    name = 'investment_query_positions'
+    description = '查询客户的股票持仓情况，包括持仓数量、成本价、当前价等信息'
+    parameters = []
+
+    def call(self, params: str, **kwargs) -> str:
+        # Mock data - in production would query MySQL
+        positions = [
+            {"stock": "贵州茅台", "ts_code": "600519.SH", "shares": 500, "cost": 1800, "current": 1440},
+            {"stock": "宁德时代", "ts_code": "300750.SZ", "shares": 200, "cost": 450, "current": 380}
+        ]
+        return f"客户持有以下股票：\n" + "\n".join([
+            f"- {p['stock']}({p['ts_code']}): {p['shares']}股，成本价{p['cost']}，当前价{p['current']}"
+            for p in positions
+        ])
+
+
+@register_tool('investment_calculate_pnl')
+class CalculatePnLTool(BaseTool):
+    """计算盈亏情况"""
+    name = 'investment_calculate_pnl'
+    description = '计算客户持仓的盈亏情况'
+    parameters = []
+
+    def call(self, params: str, **kwargs) -> str:
+        # Mock calculation
+        positions = [
+            {"stock": "贵州茅台", "shares": 500, "cost": 1800, "current": 1440},
+            {"stock": "宁德时代", "shares": 200, "cost": 450, "current": 380}
+        ]
+        total_cost = sum(p['shares'] * p['cost'] for p in positions)
+        total_value = sum(p['shares'] * p['current'] for p in positions)
+        pnl = total_value - total_cost
+        pnl_pct = pnl / total_cost * 100 if total_cost > 0 else 0
+        return f"总盈亏: {'盈利' if pnl >= 0 else '亏损'}{abs(pnl):.2f}元 ({abs(pnl_pct):.1f}%)"
+
+
+class InvestmentAgent(Assistant):
     """Specialist agent for investment analysis."""
+    NAME = "investment"
+    DESCRIPTION = "投资分析专家，可以查询持仓和计算盈亏"
+    SYSTEM_MESSAGE = """你是一个专业的投资分析专家。你可以查询客户持仓情况、计算盈亏、分析投资收益。"""
 
-    def _initialize_tools(self):
-        """Initialize investment tools."""
-        self.register_tool(Tool(
-            name="query_positions",
-            description="查询客户持仓情况"
-        ))
-        self.register_tool(Tool(
-            name="calculate_pnl",
-            description="计算盈亏情况"
-        ))
-        self.register_tool(Tool(
-            name="arima_forecast",
-            description="ARIMA预测股价"
-        ))
-        self.register_tool(Tool(
-            name="bollinger_detection",
-            description="布林带技术指标检测"
-        ))
-
-    def _execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute investment tool."""
-        task = parameters.get("task")
-
-        if tool_name == "query_positions":
-            return self._query_positions()
-        elif tool_name == "calculate_pnl":
-            return self._calculate_pnl()
-        elif tool_name == "arima_forecast":
-            return self._arima_forecast()
-        elif tool_name == "bollinger_detection":
-            return self._bollinger_detection()
-
-        return {"status": "unknown_tool", "tool": tool_name}
-
-    def _query_positions(self) -> Dict[str, Any]:
-        """Query customer positions from database."""
-        try:
-            # Try to get customer from context
-            try:
-                customer = self.shared_context.get_customer()
-            except Exception:
-                # Redis not available or no customer set
-                customer = None
-
-            # Mock positions for demonstration
-            # In production, this would query actual position data from MySQL
-            positions = [
-                {
-                    "stock": "贵州茅台",
-                    "ts_code": "600519.SH",
-                    "shares": 500,
-                    "cost": 1800,
-                    "current": 1440,
-                    "market_value": 720000
-                },
-                {
-                    "stock": "宁德时代",
-                    "ts_code": "300750.SZ",
-                    "shares": 200,
-                    "cost": 450,
-                    "current": 380,
-                    "market_value": 76000
-                }
-            ]
-
-            return {
-                "status": "success",
-                "positions": positions,
-                "summary": f"客户{(customer.name if customer else '未知')}持有{len(positions)}只股票"
-            }
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-
-    def _calculate_pnl(self) -> Dict[str, Any]:
-        """Calculate profit and loss."""
-        positions_result = self._query_positions()
-        if positions_result["status"] != "success":
-            return positions_result
-
-        positions = positions_result.get("positions", [])
-        total_cost = 0
-        total_value = 0
-
-        for pos in positions:
-            cost = pos["shares"] * pos["cost"]
-            value = pos["shares"] * pos["current"]
-            pnl = value - cost
-            pos["pnl"] = pnl
-            pos["pnl_pct"] = pnl / cost if cost > 0 else 0
-            total_cost += cost
-            total_value += value
-
-        total_pnl = total_value - total_cost
-        total_pnl_pct = total_pnl / total_cost if total_cost > 0 else 0
-
-        return {
-            "status": "success",
-            "positions": positions,
-            "total_cost": total_cost,
-            "total_value": total_value,
-            "total_pnl": total_pnl,
-            "total_pnl_pct": total_pnl_pct,
-            "summary": f"总盈亏: {'盈利' if total_pnl >= 0 else '亏损'}{abs(total_pnl):.2f}元 ({abs(total_pnl_pct)*100:.1f}%)"
-        }
-
-    def _arima_forecast(self) -> Dict[str, Any]:
-        """ARIMA price forecasting - placeholder."""
-        return {
-            "status": "placeholder",
-            "message": "ARIMA预测功能开发中"
-        }
-
-    def _bollinger_detection(self) -> Dict[str, Any]:
-        """Bollinger band detection - placeholder."""
-        return {
-            "status": "placeholder",
-            "message": "布林带检测功能开发中"
-        }
+    def __init__(self, session_id: str, **kwargs):
+        super().__init__(
+            llm={'model': 'qwen-turbo', 'model_type': 'dashscope'},
+            system_message=self.SYSTEM_MESSAGE,
+            function_list=[
+                QueryPositionsTool(),
+                CalculatePnLTool(),
+            ],
+            name=self.NAME,
+            description=self.DESCRIPTION,
+            **kwargs
+        )
