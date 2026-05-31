@@ -1,4 +1,4 @@
-"""LLM integration module."""
+"""LLM integration module - unified via config.py."""
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from dataclasses import dataclass
@@ -6,11 +6,12 @@ from dataclasses import dataclass
 import dashscope
 from dashscope import Generation
 
+from .config import get_settings
+
 
 @dataclass
 class LLMConfig:
     """LLM configuration."""
-    model: str = "qwen-turbo-2025-04-28"
     temperature: float = 0.7
     max_tokens: int = 2000
     timeout: int = 30
@@ -19,9 +20,11 @@ class LLMConfig:
 class DashScopeLLM:
     """DashScope (Qwen) LLM wrapper."""
 
-    def __init__(self, api_key: str, config: Optional[LLMConfig] = None):
-        self.api_key = api_key
-        dashscope.api_key = api_key
+    def __init__(self, api_key: Optional[str] = None, config: Optional[LLMConfig] = None):
+        settings = get_settings()
+        self.api_key = api_key or settings.dashscope_api_key
+        dashscope.api_key = self.api_key
+        self.model_name = settings.model_name
         self.config = config or LLMConfig()
 
     def chat(
@@ -42,7 +45,7 @@ class DashScopeLLM:
             extra_params["tools"] = tools
 
         response = Generation.call(
-            model=self.config.model,
+            model=self.model_name,
             messages=full_messages,
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
@@ -63,7 +66,6 @@ class DashScopeLLM:
         """Get structured JSON output from LLM."""
         messages = [{"role": "user", "content": prompt}]
         response = self.chat(messages)
-        # Parse JSON from response
         import json
         try:
             if "```json" in response:
@@ -83,9 +85,7 @@ def get_llm() -> DashScopeLLM:
     """Get global LLM instance."""
     global _llm_instance
     if _llm_instance is None:
-        from .config import get_settings
-        settings = get_settings()
-        _llm_instance = DashScopeLLM(api_key=settings.dashscope_api_key)
+        _llm_instance = DashScopeLLM()
     return _llm_instance
 
 
