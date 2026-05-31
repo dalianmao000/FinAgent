@@ -41,6 +41,15 @@ htmlcov/
 # Environment
 .env
 .env.local
+.env.docker
+
+# Old files
+*.old
+*.bak
+
+# Docs (if not committed)
+docs/
+REFACTOR_PLAN.md
 
 # Data
 *.csv

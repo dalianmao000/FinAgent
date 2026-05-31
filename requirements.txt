@@ -30,6 +30,8 @@ mlxtend>=0.22.0
 flask>=3.0.0
 gradio>=4.0.0
 gunicorn>=21.0.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
 
 # Document
 pdfplumber>=0.11.0

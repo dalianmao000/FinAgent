@@ -1,55 +1,223 @@
 services:
+  # ==================
+  # FinAgent API Service
+  # ==================
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finagent-api
+    restart: unless-stopped
     ports:
       - "5000:5000"
     environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
       - REDIS_URL=redis://redis:6379/0
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_DATABASE=finagent
+      # Model Config
+      - MODEL_NAME=${MODEL_NAME:-qwen-turbo}
+      - MODEL_TYPE=${MODEL_TYPE:-qwen_dashscope}
+      - MODEL_TEMPERATURE=${MODEL_TEMPERATURE:-0.7}
+      - MODEL_MAX_TOKENS=${MODEL_MAX_TOKENS:-2000}
+      # DashScope API
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      # MySQL - FinAgent
+      - FINAGENT_DB_HOST=mysql
+      - FINAGENT_DB_PORT=3306
+      - FINAGENT_DB_USER=root
+      - FINAGENT_DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-password}
+      - FINAGENT_DB_NAME=finagent
+      # MySQL - Stock
+      - STOCK_DB_HOST=${STOCK_DB_HOST:-stock}
+      - STOCK_DB_PORT=3306
+      - STOCK_DB_USER=root
+      - STOCK_DB_PASSWORD=${STOCK_DB_PASSWORD:-password}
+      - STOCK_DB_NAME=stock
+      # MySQL - Customer
+      - CUSTOMER_DB_HOST=${CUSTOMER_DB_HOST:-customer}
+      - CUSTOMER_DB_PORT=3306
+      - CUSTOMER_DB_USER=root
+      - CUSTOMER_DB_PASSWORD=${CUSTOMER_DB_PASSWORD:-password}
+      - CUSTOMER_DB_NAME=enterprise_credit_clients
+      # Elasticsearch
       - ES_HOST=elasticsearch
       - ES_PORT=9200
+      - ES_USERNAME=elastic
+      - ES_PASSWORD=${ES_PASSWORD:-changeme}
+      - ES_INDEX_NAME=${ES_INDEX_NAME:-qwen_agent_docs_vector}
     depends_on:
-      - redis
-      - mysql
-      - elasticsearch
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - finagent-network
 
-  celery_worker:
-    build: .
+  # ==================
+  # FastAPI Service (可选)
+  # ==================
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finagent-fastapi
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - MODEL_NAME=${MODEL_NAME:-qwen-turbo}
+      - MODEL_TYPE=${MODEL_TYPE:-qwen_dashscope}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - FINAGENT_DB_HOST=mysql
+      - FINAGENT_DB_PORT=3306
+      - FINAGENT_DB_USER=root
+      - FINAGENT_DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-password}
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
+      - ES_USERNAME=elastic
+      - ES_PASSWORD=${ES_PASSWORD:-changeme}
     depends_on:
-      - redis
-    command: celery -A src.message_bus.celery_app worker --loglevel=info
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - finagent-network
 
+  # ==================
+  # Gradio WebUI
+  # ==================
+  webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finagent-webui
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      - API_BASE_URL=http://api:5000
+      - GRADIO_SERVER_NAME=0.0.0.0
+    depends_on:
+      - api
+    networks:
+      - finagent-network
+
+  # ==================
+  # Redis Cache
+  # ==================
   redis:
     image: redis:7-alpine
+    container_name: finagent-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - finagent-network
 
+  # ==================
+  # MySQL Database
+  # ==================
   mysql:
     image: mysql:8
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=finagent
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./data/mysql:/docker-entrypoint-initdb.d
+    container_name: finagent-mysql
+    restart: unless-stopped
     ports:
       - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-password}
+      - MYSQL_DATABASE=finagent
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./data/mysql:/docker-entrypoint-initdb.d:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - finagent-network
 
+  # ==================
+  # Elasticsearch
+  # ==================
   elasticsearch:
     image: elasticsearch:8.11.0
+    container_name: finagent-elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=finagent-cluster
+      - node.name=finagent-node-1
     volumes:
       - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - finagent-network
+
+  # ==================
+  # Celery Worker (可选 - 异步任务)
+  # ==================
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finagent-celery
+    restart: unless-stopped
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: celery -A src.message_bus.celery_app worker --loglevel=info --concurrency=4
+    networks:
+      - finagent-network
 
 volumes:
+  redis_data:
+    driver: local
   mysql_data:
+    driver: local
   es_data:
+    driver: local
+
+networks:
+  finagent-network:
+    driver: bridge
