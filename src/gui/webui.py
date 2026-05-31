@@ -252,7 +252,12 @@ def app_gui():
                 unified_clear.click(lambda: ([], ""), outputs=[unified_chatbot, unified_input])
 
     print("金融智能顾问统一平台 WebUI 准备就绪...")
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    try:
+        demo.launch(server_name="0.0.0.0", server_port=7861, show_error=True)
+    except Exception as e:
+        print(f"启动服务 (后台运行): {e}")
+        import time
+        time.sleep(3600)  # Keep alive
 
 
 if __name__ == '__main__':
