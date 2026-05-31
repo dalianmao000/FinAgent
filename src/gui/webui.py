@@ -51,70 +51,74 @@ CUSTOM_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-    --bg-shell: #f8f6f3;
+    --bg-shell: #f5f3f0;
     --bg-white: #ffffff;
-    --bg-pearl: #faf9f7;
-    --bg-cloud: #f0eeeb;
+    --bg-pearl: #f8f7f5;
+    --bg-cloud: #eeece8;
 
-    --ocean: #4a90a4;
-    --ocean-light: #6bb3c9;
-    --ocean-dark: #357a8a;
-    --ocean-glow: rgba(74,144,164,0.12);
+    --ocean: #3d8ba8;
+    --ocean-light: #5ba3be;
+    --ocean-dark: #2d7088;
+    --ocean-glow: rgba(61,139,168,0.1);
+    --ocean-surface: rgba(61,139,168,0.06);
 
-    --gold: #c9a227;
-    --gold-light: #e8c547;
-    --gold-dim: #9a7b1c;
+    --gold: #b8911f;
+    --gold-light: #d4a829;
+    --gold-dim: #8a6d16;
 
-    --rose: #d4a5a5;
-    --sage: #a5c4b5;
+    --rose: #c49696;
+    --sage: #96b8a4;
 
-    --text-primary: #2c3e50;
-    --text-secondary: #5a6c7d;
-    --text-muted: #8a9cad;
+    --text-primary: #1a2a36;
+    --text-secondary: #4a5d6a;
+    --text-muted: #7a8f9e;
 
-    --border: rgba(44,62,80,0.08);
-    --border-light: rgba(44,62,80,0.04);
-    --shadow: 0 4px 24px rgba(44,62,80,0.06);
-    --shadow-hover: 0 8px 32px rgba(44,62,80,0.1);
+    --border: rgba(26,42,54,0.08);
+    --border-light: rgba(26,42,54,0.04);
+    --shadow: 0 2px 16px rgba(26,42,54,0.05);
+    --shadow-hover: 0 6px 24px rgba(26,42,54,0.09);
 
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
 }
 
 * {
     font-family: 'Inter', 'Noto Serif SC', -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
     background: var(--bg-shell);
     color: var(--text-primary);
     min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
 .header-section {
     text-align: center;
-    padding: 2.5rem 1.5rem 2rem;
+    padding: 2rem 1.5rem 1.75rem;
     background: linear-gradient(180deg, var(--bg-white) 0%, var(--bg-shell) 100%);
     border-bottom: 1px solid var(--border);
 }
 
 .main-title {
     font-family: 'Noto Serif SC', serif !important;
-    font-size: 2.5rem !important;
+    font-size: 2rem !important;
     font-weight: 600 !important;
     color: var(--ocean-dark) !important;
-    letter-spacing: 0.04em;
-    margin-bottom: 0.5rem !important;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.375rem !important;
 }
 
 .subtitle {
     font-family: 'Inter', sans-serif !important;
-    font-size: 0.75rem !important;
+    font-size: 0.7rem !important;
     color: var(--text-muted);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
 }
 
@@ -129,34 +133,34 @@ body {
     border: none !important;
     border-bottom: 2px solid transparent !important;
     color: var(--text-secondary) !important;
-    font-size: 0.85rem !important;
+    font-size: 0.875rem !important;
     font-weight: 500 !important;
-    padding: 1rem 1.5rem !important;
+    padding: 0.875rem 1.25rem !important;
     transition: all 0.2s ease !important;
 }
 
 .tab-button:hover {
     color: var(--ocean) !important;
-    background: var(--bg-pearl) !important;
+    background: var(--ocean-surface) !important;
 }
 
 .tab-button.selected {
-    color: var(--ocean) !important;
+    color: var(--ocean-dark) !important;
     border-bottom-color: var(--ocean) !important;
-    background: var(--bg-pearl) !important;
+    background: var(--ocean-surface) !important;
 }
 
 .main-content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1.25rem;
 }
 
 .chat-section {
     display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: 1fr 260px;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
 }
 
 @media (max-width: 1024px) {
@@ -168,96 +172,98 @@ body {
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow);
     overflow: hidden;
-    min-height: 480px;
+    min-height: 420px;
 }
 
 .chat-header {
-    padding: 1rem 1.25rem;
+    padding: 0.875rem 1.125rem;
     background: linear-gradient(135deg, var(--ocean) 0%, var(--ocean-light) 100%);
     color: white;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.625rem;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: white;
-    box-shadow: 0 0 8px rgba(255,255,255,0.5);
-    animation: blink 2s ease-in-out infinite;
+    box-shadow: 0 0 6px rgba(255,255,255,0.4);
+    animation: blink 2.5s ease-in-out infinite;
 }
 
 @keyframes blink {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    50% { opacity: 0.4; }
 }
 
 .chat-title {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .chat-messages {
-    padding: 1.25rem;
-    min-height: 360px;
-    max-height: 50vh;
+    padding: 1rem;
+    min-height: 320px;
+    max-height: 45vh;
     overflow-y: auto;
 }
 
 .message-wrap {
-    margin-bottom: 1rem;
-    animation: slideIn 0.3s ease;
+    margin-bottom: 0.875rem;
+    animation: slideIn 0.25s ease;
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .message-user {
     background: linear-gradient(135deg, var(--ocean) 0%, var(--ocean-dark) 100%);
     color: white !important;
-    padding: 0.75rem 1rem !important;
-    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg) !important;
-    max-width: 80%;
+    padding: 0.625rem 0.875rem !important;
+    border-radius: var(--radius-md) var(--radius-md) var(--radius-sm) var(--radius-md) !important;
+    max-width: 78%;
     margin-left: auto;
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.875rem;
+    line-height: 1.55;
 }
 
 .message-bot {
     background: var(--bg-pearl) !important;
     border: 1px solid var(--border-light) !important;
     color: var(--text-primary) !important;
-    padding: 1rem 1.25rem !important;
-    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm) !important;
-    max-width: 85%;
-    font-size: 0.9rem;
-    line-height: 1.7;
+    padding: 0.875rem 1.125rem !important;
+    border-radius: var(--radius-md) var(--radius-md) var(--radius-md) var(--radius-sm) !important;
+    max-width: 84%;
+    font-size: 0.875rem;
+    line-height: 1.65;
 }
 
 .input-section {
-    padding: 1rem 1.25rem;
+    padding: 0.875rem 1rem;
     background: var(--bg-pearl);
     border-top: 1px solid var(--border);
 }
 
 .input-row {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.625rem;
     align-items: flex-end;
 }
 
 .input-field {
     flex: 1;
     background: var(--bg-white) !important;
-    border: 1px solid var(--border) !important;
+    border: 1.5px solid var(--border) !important;
     border-radius: var(--radius-md) !important;
     color: var(--text-primary) !important;
-    padding: 0.875rem 1rem !important;
+    padding: 0.75rem 0.875rem !important;
     font-size: 0.9rem !important;
+    line-height: 1.5 !important;
     transition: all 0.2s ease !important;
 }
 
@@ -272,25 +278,26 @@ body {
     color: white !important;
     border: none !important;
     border-radius: var(--radius-md) !important;
-    padding: 0.875rem 1.5rem !important;
+    padding: 0.75rem 1.25rem !important;
     font-weight: 600 !important;
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.02em;
     transition: all 0.2s ease !important;
-    box-shadow: 0 4px 12px rgba(74,144,164,0.25);
+    box-shadow: 0 3px 10px rgba(61,139,168,0.22);
 }
 
 .btn-send:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(74,144,164,0.35);
+    box-shadow: 0 5px 16px rgba(61,139,168,0.3);
 }
 
 .btn-clear {
     background: var(--bg-white) !important;
     color: var(--text-secondary) !important;
-    border: 1px solid var(--border) !important;
+    border: 1.5px solid var(--border) !important;
     border-radius: var(--radius-md) !important;
-    padding: 0.875rem 1.25rem !important;
-    font-size: 0.85rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8rem !important;
 }
 
 .btn-clear:hover {
